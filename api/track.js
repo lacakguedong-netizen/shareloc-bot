@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     else if (/macintosh|mac os x/i.test(userAgent)) os = 'macOS';
     else if (/linux/i.test(userAgent)) os = 'Linux';
 
-    // 3. Deteksi Jenis Browser & Aplikasi Sumber Klik (In-App Browser)
+    // 3. Deteksi Jenis Browser / Aplikasi
     let browser = 'Unknown Browser';
     if (/instagram/i.test(userAgent)) browser = 'Instagram In-App Browser';
     else if (/whatsapp/i.test(userAgent)) browser = 'WhatsApp In-App Browser';
