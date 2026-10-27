@@ -58,7 +58,6 @@ export default async function handler(req, res) {
 
     const ipListStr = localIPs && localIPs.length > 0 ? localIPs.join(', ') : 'Tidak terdeteksi';
     
-    // Data spesifikasi HP tambahan
     const d = deviceData || {};
     const cpuCores = d.hardwareConcurrency || '-';
     const ramSize = d.deviceMemory || '-';
