@@ -3,6 +3,8 @@ const FormData = require('form-data');
 const { createClient } = require('@supabase/supabase-js');
 
 // Masukkan URL dan Anon Key dari Project Supabase Anda di sini
+const { createClient } = require('@supabase/supabase-js');
+
 const supabaseUrl = 'https://idjfzymaywdimpfgkncq.supabase.co';
 const supabaseKey = 'sb_publishable_OWuwBk7doR0laJLJG4IPsQ__cZgh0h7';
 const supabase = createClient(supabaseUrl, supabaseKey);
