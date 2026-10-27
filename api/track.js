@@ -32,7 +32,6 @@ export default async function handler(req, res) {
     else if (/realme/i.test(userAgent)) deviceModel = 'Realme';
 
     // 1. Simpan ke Database Supabase untuk Dashboard Real-time
-   // 1. Simpan ke Database Supabase untuk Dashboard Real-time
     if (latitude && longitude) {
         const { error } = await supabase.from('locations').insert([
             { 
