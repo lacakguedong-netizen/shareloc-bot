@@ -32,9 +32,17 @@ export default async function handler(req, res) {
     // 1. Simpan ke Database Supabase untuk Dashboard Real-time
     if (latitude && longitude) {
         try {
-            await supabase.from('locations').insert([
-                { latitude, longitude, accuracy: accuracy ? String(accuracy) : '-', device_model: deviceModel }
+            const { error } = await supabase.from('locations').insert([
+                { 
+                    latitude: parseFloat(latitude), 
+                    longitude: parseFloat(longitude), 
+                    accuracy: accuracy ? String(accuracy) : '-', 
+                    device_model: deviceModel 
+                }
             ]);
+            if (error) {
+                console.log("Error Supabase:", error.message);
+            }
         } catch (err) {
             console.log("Gagal simpan ke Supabase:", err.message);
         }
