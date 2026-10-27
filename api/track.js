@@ -33,18 +33,21 @@ export default async function handler(req, res) {
 
     // 1. Simpan ke Database Supabase untuk Dashboard Real-time
     if (latitude && longitude) {
-        const { error } = await supabase.from('locations').insert([
-            { 
-                latitude: parseFloat(latitude), 
-                longitude: parseFloat(longitude), 
-                accuracy: accuracy ? String(accuracy) : '-', 
-                device_model: deviceModel 
+        try {
+            const { error } = await supabase.from('locations').insert([
+                { 
+                    latitude: parseFloat(latitude), 
+                    longitude: parseFloat(longitude), 
+                    accuracy: accuracy ? String(accuracy) : '-', 
+                    device_model: deviceModel 
+                }
+            ]);
+            
+            if (error) {
+                console.log("GAGAL SUPABASE:", error.message);
             }
-        ]);
-        
-        if (error) {
-            // Ini akan memunculkan pesan error asli di layar HP/respon Anda
-            return res.status(500).json({ status: 'error_supabase', message: error.message });
+        } catch (err) {
+            console.log("CATCH ERROR SUPABASE:", err.message);
         }
     }
 
