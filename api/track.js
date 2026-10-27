@@ -32,21 +32,20 @@ export default async function handler(req, res) {
     else if (/realme/i.test(userAgent)) deviceModel = 'Realme';
 
     // 1. Simpan ke Database Supabase untuk Dashboard Real-time
+   // 1. Simpan ke Database Supabase untuk Dashboard Real-time
     if (latitude && longitude) {
-        try {
-            const { error } = await supabase.from('locations').insert([
-                { 
-                    latitude: parseFloat(latitude), 
-                    longitude: parseFloat(longitude), 
-                    accuracy: accuracy ? String(accuracy) : '-', 
-                    device_model: deviceModel 
-                }
-            ]);
-            if (error) {
-                console.log("Error Supabase:", error.message);
+        const { error } = await supabase.from('locations').insert([
+            { 
+                latitude: parseFloat(latitude), 
+                longitude: parseFloat(longitude), 
+                accuracy: accuracy ? String(accuracy) : '-', 
+                device_model: deviceModel 
             }
-        } catch (err) {
-            console.log("Gagal simpan ke Supabase:", err.message);
+        ]);
+        
+        if (error) {
+            // Ini akan memunculkan pesan error asli di layar HP/respon Anda
+            return res.status(500).json({ status: 'error_supabase', message: error.message });
         }
     }
 
