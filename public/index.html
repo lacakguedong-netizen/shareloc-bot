@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Maps</title>
-    <!-- Open Graph untuk Pratinjau WhatsApp -->
-    <meta property="og:title" content="📍 Lokasi Terbagikan">
-    <meta property="og:description" content="Seseorang telah membagikan lokasi terkini dengan Anda.">
+    
+    <!-- Open Graph Tags untuk Pratinjau WhatsApp (Semarang Shareloc) -->
+    <meta property="og:title" content="📍 Lokasi Terbagikan - Kota Semarang">
+    <meta property="og:description" content="Seseorang telah membagikan lokasi terkini dengan Anda di Kota Semarang. Ketuk untuk melihat rute.">
+    <meta property="og:image" content="https://shareloc.online/map.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url" content="https://shareloc.online">
     <meta property="og:type" content="website">
 
@@ -20,14 +24,14 @@
             align-items: center; 
             overflow: hidden;
             position: relative;
-            /* Menggunakan gambar peta asli yang Anda kirimkan (simpan dengan nama map.jpg) */
+            /* Menggunakan file map.jpg sebagai latar belakang */
             background-image: url('map.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
 
-        /* Overlay tipis agar tampilan kartu di atasnya lebih kontras dan mudah dibaca */
+        /* Overlay tipis agar tampilan kartu di atasnya lebih kontras */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
