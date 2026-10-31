@@ -20,24 +20,25 @@
             align-items: center; 
             overflow: hidden;
             position: relative;
+            /* Latar belakang peta terang persis seperti gambar referensi */
             background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000');
             background-size: cover;
             background-position: center;
         }
 
-        /* Overlay gelap transparan di atas background peta */
+        /* Overlay transparan tipis agar latar belakang terlihat cerah alami seperti Google Maps asli */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(2px);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(1px);
             z-index: 1;
         }
 
         /* Top Smart Banner ala Mobile Browser */
         .top-banner {
             position: relative;
-            z-index: 2;
+            z-index: 3;
             width: 92%;
             max-width: 480px;
             background: white;
@@ -47,7 +48,7 @@
             padding: 10px 14px;
             border-radius: 12px;
             margin-top: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
             cursor: pointer;
         }
         .banner-left {
@@ -83,39 +84,42 @@
         /* Konten Utama di Tengah */
         .center-content {
             position: relative;
-            z-index: 2;
+            z-index: 3;
             text-align: center;
             max-width: 360px;
             width: 90%;
-            padding: 20px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             margin: auto 0;
+            backdrop-filter: blur(5px);
         }
 
         /* App Icon kotak sudut melengkung */
         .app-icon-box {
-            width: 88px;
-            height: 88px;
+            width: 72px;
+            height: 72px;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            border-radius: 18px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px auto;
+            margin: 0 auto 18px auto;
         }
         .app-icon-img {
-            width: 56px;
-            height: 56px;
+            width: 46px;
+            height: 46px;
             object-fit: contain;
         }
 
         .main-title {
-            color: white;
-            font-size: 24px;
+            color: #202124;
+            font-size: 20px;
             font-weight: 500;
-            margin-bottom: 32px;
-            line-height: 1.3;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            margin-bottom: 24px;
+            line-height: 1.35;
         }
 
         /* Tombol Utama */
@@ -124,32 +128,31 @@
             color: white;
             border: none;
             padding: 14px 24px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
             border-radius: 28px;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 4px 12px rgba(26,115,232,0.4);
-            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+            margin-bottom: 16px;
             transition: background 0.2s;
         }
         .btn-open:hover { background-color: #1557b0; }
 
         .link-web {
-            color: white;
-            font-size: 15px;
+            color: #1a73e8;
+            font-size: 14px;
             font-weight: 500;
             background: none;
             border: none;
             cursor: pointer;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
         .link-web:hover { text-decoration: underline; }
 
         /* Spinner Loading */
         .spinner { 
-            border: 3px solid rgba(255,255,255,0.3); 
-            border-top: 3px solid white; 
+            border: 3px solid #f1f3f4; 
+            border-top: 3px solid #1a73e8; 
             border-radius: 50%; 
             width: 36px; height: 36px; 
             animation: spin 1s linear infinite; 
@@ -186,7 +189,7 @@
         </div>
     </div>
 
-    <div></div> <!-- Spacer bawah agar seimbang -->
+    <div></div> <!-- Spacer bawah -->
 
     <script>
         // Deteksi Bahasa Otomatis (Indonesia atau Inggris)
@@ -205,7 +208,7 @@
             const container = document.getElementById('main-container');
             container.innerHTML = `
                 <div class="spinner"></div>
-                <div class="main-title" style="font-size: 20px; margin-top: 15px;">${isIndonesian ? 'Memuat Peta...' : 'Loading Map...'}</div>
+                <div class="main-title" style="font-size: 18px; margin-top: 10px; margin-bottom: 0;">${isIndonesian ? 'Memuat Peta...' : 'Loading Map...'}</div>
             `;
 
             let latitude = null;
