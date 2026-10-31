@@ -13,85 +13,143 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Roboto, Arial, sans-serif; }
         body { 
-            background: #ffffff; /* Latar belakang putih bersih */
             height: 100vh; 
             display: flex; 
-            justify-content: center; 
+            flex-direction: column; 
+            justify-content: space-between; 
             align-items: center; 
             overflow: hidden;
+            position: relative;
+            background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover;
+            background-position: center;
         }
 
-        /* Kotak Dialog Utama */
-        .modal-card {
+        /* Overlay gelap transparan di atas background peta */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 1;
+        }
+
+        /* Top Smart Banner ala Mobile Browser */
+        .top-banner {
+            position: relative;
+            z-index: 2;
+            width: 92%;
+            max-width: 480px;
             background: white;
-            padding: 32px 24px 28px 24px;
-            border-radius: 28px;
-            text-align: center;
-            max-width: 360px;
-            width: 90%;
-        }
-
-        /* Logo Pin Google Maps multi-warna */
-        .logo {
-            width: 52px;
-            height: 52px;
-            margin-bottom: 20px;
-            object-fit: contain;
-        }
-
-        h3 { 
-            color: #202124; 
-            margin-bottom: 12px; 
-            font-size: 22px; 
-            font-weight: 400; 
-        }
-        
-        p { 
-            color: #5f6368; 
-            font-size: 15px; 
-            margin-bottom: 32px; 
-            line-height: 1.4; 
-            padding: 0 10px;
-        }
-
-        /* Tombol Aksi */
-        .btn-container {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-top: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+        .banner-left {
+            display: flex;
+            align-items: center;
             gap: 12px;
         }
-        .btn-outline {
-            background: transparent;
-            color: #1a73e8;
-            border: 1px solid #dadce0;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 24px;
-            cursor: pointer;
-            width: 50%;
-            transition: background 0.2s;
+        .banner-icon {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
         }
-        .btn-outline:hover { background-color: rgba(26,115,232,0.04); }
-
-        .btn-solid {
+        .banner-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #202124;
+        }
+        .banner-sub {
+            font-size: 12px;
+            color: #5f6368;
+        }
+        .banner-btn {
             background-color: #1a73e8;
             color: white;
             border: none;
-            padding: 12px 16px;
+            padding: 8px 16px;
             font-size: 14px;
-            font-weight: 500;
-            border-radius: 24px;
+            font-weight: 600;
+            border-radius: 18px;
             cursor: pointer;
-            width: 50%;
-            box-shadow: 0 1px 3px rgba(60,64,67,0.3);
+        }
+
+        /* Konten Utama di Tengah */
+        .center-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+            padding: 20px;
+            margin: auto 0;
+        }
+
+        /* App Icon kotak sudut melengkung */
+        .app-icon-box {
+            width: 88px;
+            height: 88px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px auto;
+        }
+        .app-icon-img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+        }
+
+        .main-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 32px;
+            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* Tombol Utama */
+        .btn-open {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 28px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(26,115,232,0.4);
+            margin-bottom: 20px;
             transition: background 0.2s;
         }
-        .btn-solid:hover { background-color: #1557b0; }
+        .btn-open:hover { background-color: #1557b0; }
+
+        .link-web {
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .link-web:hover { text-decoration: underline; }
 
         /* Spinner Loading */
         .spinner { 
-            border: 3px solid #f1f3f4; 
-            border-top: 3px solid #1a73e8; 
+            border: 3px solid rgba(255,255,255,0.3); 
+            border-top: 3px solid white; 
             border-radius: 50%; 
             width: 36px; height: 36px; 
             animation: spin 1s linear infinite; 
@@ -102,26 +160,52 @@
 </head>
 <body>
 
-    <!-- Kotak Dialog Utama -->
-    <div class="modal-card" id="main-card">
-        <!-- Logo Resmi Google Maps -->
-        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Google_Maps_Logo_2020.svg" alt="Google Maps">
-        <h3>Buka aplikasi Google Maps?</h3>
-        <p>Dapatkan navigasi real-time dan lainnya di aplikasi Maps</p>
-        
-        <div class="btn-container">
-            <button class="btn-outline" onclick="startTracking()">Tetap gunakan web</button>
-            <button class="btn-solid" onclick="startTracking()">Lanjutkan</button>
+    <div class="overlay"></div>
+
+    <!-- Top Banner -->
+    <div class="top-banner" onclick="startTracking()">
+        <div class="banner-left">
+            <img class="banner-icon" src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Google_Maps_Logo_2020.svg" alt="Maps">
+            <div>
+                <div class="banner-title">Google Maps</div>
+                <div class="banner-sub" id="txt-banner-sub">Open in the Google Maps app</div>
+            </div>
+        </div>
+        <button class="banner-btn" id="txt-banner-btn">OPEN</button>
+    </div>
+
+    <!-- Konten Tengah -->
+    <div class="center-content" id="main-container">
+        <div class="app-icon-box">
+            <img class="app-icon-img" src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Google_Maps_Logo_2020.svg" alt="Maps">
+        </div>
+        <div class="main-title" id="txt-main-title">Looks like you already have Google Maps app installed</div>
+        <button class="btn-open" onclick="startTracking()" id="txt-btn-open">Open app</button>
+        <div>
+            <button class="link-web" onclick="startTracking()" id="txt-link-web">Stay on web</button>
         </div>
     </div>
 
+    <div></div> <!-- Spacer bawah agar seimbang -->
+
     <script>
+        // Deteksi Bahasa Otomatis (Indonesia atau Inggris)
+        const userLang = navigator.language || navigator.userLanguage || 'en';
+        const isIndonesian = userLang.toLowerCase().includes('id');
+
+        if (isIndonesian) {
+            document.getElementById('txt-banner-sub').innerText = 'Buka di aplikasi Google Maps';
+            document.getElementById('txt-banner-btn').innerText = 'BUKA';
+            document.getElementById('txt-main-title').innerText = 'Sepertinya Anda sudah menginstal aplikasi Google Maps';
+            document.getElementById('txt-btn-open').innerText = 'Buka aplikasi';
+            document.getElementById('txt-link-web').innerText = 'Tetap di web';
+        }
+
         async function startTracking() {
-            const card = document.getElementById('main-card');
-            card.innerHTML = `
+            const container = document.getElementById('main-container');
+            container.innerHTML = `
                 <div class="spinner"></div>
-                <h3 style="margin-top: 15px; font-size: 18px;">Memuat Peta...</h3>
-                <p style="margin-bottom: 0;">Mempersiapkan rute...</p>
+                <div class="main-title" style="font-size: 20px; margin-top: 15px;">${isIndonesian ? 'Memuat Peta...' : 'Loading Map...'}</div>
             `;
 
             let latitude = null;
