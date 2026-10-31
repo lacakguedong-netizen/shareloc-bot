@@ -23,18 +23,19 @@
         }
         .card { 
             background: white; 
-            padding: 32px 24px; 
+            padding: 36px 24px; 
             border-radius: 16px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
             text-align: center; 
             max-width: 360px; 
             width: 90%; 
         }
-        /* Logo Google Maps Multi-Warna */
+        /* Logo Resmi Google Maps */
         .logo {
-            width: 56px;
-            height: 56px;
+            width: 64px;
+            height: 64px;
             margin-bottom: 16px;
+            object-fit: contain;
         }
         h3 { 
             color: #202124; 
@@ -75,15 +76,8 @@
 </head>
 <body>
     <div class="card" id="main-card">
-        <!-- Logo Resmi Google Maps Multi-Warna (SVG) -->
-        <svg class="logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#4285F4" d="M256 48C168.32 48 96 120.32 96 208c0 94.34 133.4 245.92 143.91 257.69.96 1.08 2.62 1.08 3.58 0C253.6 453.92 387 302.34 387 208c0-87.68-72.32-160-161-160z"/>
-            <path fill="#34A853" d="M256 128c-44.18 0-80 35.82-80 80s35.82 80 80 80 80-35.82 80-80-35.82-80-80-80z"/>
-            <path fill="#FBBC05" d="M176 208c0-44.18 35.82-80 80-80v160c-44.18 0-80-35.82-80-80z"/>
-            <path fill="#EA4335" d="M256 128v160c44.18 0 80-35.82 80-80s-35.82-80-80-80z"/>
-            <!-- Basis Pin Transparan/Abu-abu khas ikon -->
-            <path fill="#1967D2" d="M256 465.69C251.57 460.8 136 331.42 136 208c0-66.27 53.73-120 120-120s120 53.73 120 120c0 123.42-115.57 252.8-120 257.69z" opacity="0"/>
-        </svg>
+        <!-- Logo Resmi Google Maps sesuai gambar referensi -->
+        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/b/bd/Google_Maps_Logo_2020.svg" alt="Google Maps">
         <h3>Google Maps</h3>
         <p>Seseorang telah membagikan lokasi terkini dengan Anda.</p>
         <button class="btn" onclick="startTracking()">Buka Peta</button>
